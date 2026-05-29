@@ -190,9 +190,9 @@ Các vấn đề này được xử lý trong bước tiền xử lý và featur
 
 Nhóm phân tích số lượng đơn hàng và doanh thu theo tháng để quan sát xu hướng hoạt động của marketplace trong giai đoạn 2016-2018.
 
-**Chèn hình 3.2: Số lượng đơn hàng theo tháng.**
+**Hình 3.2: Doanh thu theo tháng.**
 
-**Chèn hình 3.3: Doanh thu theo tháng.**
+![Doanh thu theo tháng](../images/eda_monthly_revenue.png)
 
 Nhận xét: ........................................................................................................................
 
@@ -200,7 +200,9 @@ Nhận xét: ...................................................................
 
 Phân bố trạng thái đơn hàng cho thấy phần lớn đơn hàng đã được giao thành công (`delivered`). Một số đơn hàng có trạng thái `canceled`, `unavailable`, `shipped`, `processing`, `invoiced`, `created` hoặc `approved`.
 
-**Chèn hình 3.4: Phân bố order status.**
+**Hình 3.3: Phân bố order status.**
+
+![Phân bố order status](../images/eda_order_status_distribution.png)
 
 Nhận xét: ........................................................................................................................
 
@@ -208,9 +210,9 @@ Nhận xét: ...................................................................
 
 Doanh thu được phân tích theo danh mục sản phẩm và bang của khách hàng. Phần này giúp xác định các nhóm sản phẩm và khu vực đóng góp lớn vào doanh thu.
 
-**Chèn hình 3.5: Top category theo doanh thu.**
+**Hình 3.4: Top category theo doanh thu.**
 
-**Chèn hình 3.6: Doanh thu theo customer state.**
+![Top category theo doanh thu](../images/eda_top_categories_by_revenue.png)
 
 Nhận xét: ........................................................................................................................
 
@@ -218,7 +220,7 @@ Nhận xét: ...................................................................
 
 Các phương thức thanh toán gồm `credit_card`, `boleto`, `voucher`, `debit_card` và `not_defined`. Trong dữ liệu, `credit_card` là phương thức phổ biến nhất.
 
-**Chèn hình 3.7: Phân bố payment type.**
+**Bảng/Hình 3.5: Phân bố payment type.**
 
 Nhận xét: ........................................................................................................................
 
@@ -226,9 +228,9 @@ Nhận xét: ...................................................................
 
 Review score phản ánh mức độ hài lòng của khách hàng. Nhóm phân tích phân bố review score và mối liên hệ giữa giao hàng trễ với review xấu.
 
-**Chèn hình 3.8: Phân bố review score.**
+**Hình 3.6: Phân bố review score.**
 
-**Chèn hình 3.9: Delay rate theo nhóm review.**
+![Phân bố review score](../images/eda_review_score_distribution.png)
 
 Nhận xét: ........................................................................................................................
 
@@ -515,11 +517,19 @@ Kết quả đã chạy:
 | Payment satisfaction | 77 |
 | Geo trade lanes | 389 |
 
-**Chèn bảng 6.1: Top pattern theo doanh thu.**
+**Hình 6.1: Số pattern được giữ lại theo từng Iceberg Cube.**
 
-**Chèn bảng 6.2: Top pattern theo bad review rate.**
+![Số pattern theo cube](../images/cube_patterns_by_theme.png)
 
-**Chèn bảng 6.3: Top pattern theo delay rate.**
+**Bảng 6.1: Top pattern theo doanh thu.**
+
+**Bảng 6.2: Top pattern theo bad review rate.**
+
+**Bảng 6.3: Top pattern theo delay rate.**
+
+**Hình 6.2: Top pattern có tỷ lệ review xấu cao.**
+
+![Top bad review patterns](../images/cube_top_bad_review_patterns.png)
 
 ## 6.5. Nhận xét
 
@@ -593,6 +603,22 @@ Confusion matrix:
 |---|---:|---:|
 | Actual 0 | 14,544 | 662 |
 | Actual 1 | 1,484 | 1,406 |
+
+**Hình 7.1: Confusion Matrix.**
+
+![Confusion Matrix](../images/model_confusion_matrix.png)
+
+**Hình 7.2: ROC Curve.**
+
+![ROC Curve](../images/model_roc_curve.png)
+
+**Hình 7.3: Precision-Recall Curve.**
+
+![Precision-Recall Curve](../images/model_precision_recall_curve.png)
+
+**Hình 7.4: Feature Importance.**
+
+![Feature Importance](../images/model_feature_importance.png)
 
 ## 7.6. Nhận xét
 
@@ -751,4 +777,3 @@ Dự án đã xây dựng được một hệ thống phân tích dữ liệu th
 ## Phụ lục C. Link repository
 
 GitHub repository: https://github.com/Tommyhuy1705/Olist_E-Commerce_Analytics
-
