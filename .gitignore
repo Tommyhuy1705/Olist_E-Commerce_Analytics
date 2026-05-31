@@ -20,6 +20,8 @@ data/processed/
 models/*.pkl
 models/*.joblib
 models/*metrics.json
+models/*.csv
+models/*.json
 
 # Local secrets
 .env

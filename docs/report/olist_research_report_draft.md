@@ -587,36 +587,57 @@ Ngoài ra, code cũng hỗ trợ HistGradientBoosting để thử nghiệm nâng
 
 ## 7.5. Kết quả đánh giá
 
+Nhóm đã chạy đủ ba mô hình classification để so sánh: Logistic Regression, Random Forest và HistGradientBoosting. Kết quả được lưu tại `docs/report/model_comparison.csv`.
+
+**Bảng 7.1: So sánh kết quả các mô hình classification.**
+
+| Mô hình | Accuracy | Precision | Recall | F1 | ROC-AUC | Avg Precision |
+|---|---:|---:|---:|---:|---:|---:|
+| Random Forest | 0.8822 | 0.6836 | 0.4889 | 0.5701 | 0.7956 | 0.5890 |
+| HistGradientBoosting | 0.8901 | 0.8005 | 0.4152 | 0.5468 | 0.7998 | 0.5991 |
+| Logistic Regression | 0.7976 | 0.3962 | 0.5104 | 0.4461 | 0.7397 | 0.4697 |
+
+Random Forest được chọn làm mô hình chính vì đạt F1 cao nhất. HistGradientBoosting có accuracy, precision và ROC-AUC cao hơn, nhưng recall thấp hơn nên F1 tổng thể thấp hơn Random Forest trong mục tiêu phát hiện review xấu.
+
+**Hình 7.1: Bảng so sánh kết quả các mô hình.**
+
+![Model Comparison Table](../images/model_comparison_table.png)
+
+**Hình 7.2: Biểu đồ so sánh các chỉ số chính.**
+
+![Model Comparison Metrics](../images/model_comparison_metrics.png)
+
 Kết quả mô hình Random Forest:
 
 | Metric | Giá trị |
 |---|---:|
-| Accuracy | 0.8814 |
-| Precision lớp bad review | 0.6799 |
-| Recall lớp bad review | 0.4865 |
-| F1 lớp bad review | 0.5672 |
-| ROC-AUC | 0.7953 |
+| Accuracy | 0.8822 |
+| Precision lớp bad review | 0.6836 |
+| Recall lớp bad review | 0.4889 |
+| F1 lớp bad review | 0.5701 |
+| ROC-AUC | 0.7956 |
+| Average Precision | 0.5890 |
 
 Confusion matrix:
 
 |  | Predicted 0 | Predicted 1 |
 |---|---:|---:|
-| Actual 0 | 14,544 | 662 |
-| Actual 1 | 1,484 | 1,406 |
+| Actual 0 | 14,552 | 654 |
+| Actual 1 | 1,477 | 1,413 |
 
-**Hình 7.1: Confusion Matrix.**
+**Hình 7.3: Confusion Matrix.**
 
 ![Confusion Matrix](../images/model_confusion_matrix.png)
 
-**Hình 7.2: ROC Curve.**
+**Hình 7.4: ROC Curve.**
 
 ![ROC Curve](../images/model_roc_curve.png)
 
-**Hình 7.3: Precision-Recall Curve.**
+**Hình 7.5: Precision-Recall Curve.**
 
 ![Precision-Recall Curve](../images/model_precision_recall_curve.png)
 
-**Hình 7.4: Feature Importance.**
+**Hình 7.6: Feature Importance.**
 
 ![Feature Importance](../images/model_feature_importance.png)
 

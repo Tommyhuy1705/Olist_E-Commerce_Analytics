@@ -13,6 +13,7 @@ from sklearn.impute import SimpleImputer
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     accuracy_score,
+    average_precision_score,
     classification_report,
     confusion_matrix,
     f1_score,
@@ -63,14 +64,15 @@ def build_preprocessor() -> ColumnTransformer:
     categorical_pipeline = Pipeline(
         steps=[
             ("imputer", SimpleImputer(strategy="most_frequent")),
-            ("onehot", OneHotEncoder(handle_unknown="ignore")),
+            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
         ]
     )
     return ColumnTransformer(
         transformers=[
             ("num", numeric_pipeline, NUMERIC_FEATURES),
             ("cat", categorical_pipeline, CATEGORICAL_FEATURES),
-        ]
+        ],
+        sparse_threshold=0.0,
     )
 
 
@@ -131,6 +133,7 @@ def train_model(
         "recall": float(recall_score(y_test, y_pred, zero_division=0)),
         "f1": float(f1_score(y_test, y_pred, zero_division=0)),
         "roc_auc": float(roc_auc_score(y_test, y_proba)) if y_proba is not None else None,
+        "average_precision": float(average_precision_score(y_test, y_proba)) if y_proba is not None else None,
         "confusion_matrix": confusion_matrix(y_test, y_pred).tolist(),
         "classification_report": classification_report(y_test, y_pred, zero_division=0, output_dict=True),
     }
@@ -140,6 +143,48 @@ def train_model(
     output_path.parent.mkdir(parents=True, exist_ok=True)
     joblib.dump({"pipeline": pipeline, "metrics": metrics, "features": NUMERIC_FEATURES + CATEGORICAL_FEATURES}, output_path)
     return pipeline, metrics
+
+
+def train_model_suite(
+    model_dataset: pd.DataFrame,
+    model_names: list[str] | None = None,
+    save_best: bool = True,
+) -> tuple[dict[str, Pipeline], pd.DataFrame]:
+    """Train all candidate classifiers and return a comparison table."""
+    if model_names is None:
+        model_names = ["logistic_regression", "random_forest", "hist_gradient_boosting"]
+
+    models: dict[str, Pipeline] = {}
+    rows: list[dict] = []
+    best_model_name: str | None = None
+    best_f1 = -1.0
+
+    for model_name in model_names:
+        output_path = MODELS_DIR / f"{model_name}.pkl"
+        pipeline, metrics = train_model(model_dataset, model_name=model_name, output_path=output_path)
+        models[model_name] = pipeline
+        rows.append(
+            {
+                "model_name": model_name,
+                "n_train": metrics["n_train"],
+                "n_test": metrics["n_test"],
+                "positive_rate": metrics["positive_rate"],
+                "accuracy": metrics["accuracy"],
+                "precision": metrics["precision"],
+                "recall": metrics["recall"],
+                "f1": metrics["f1"],
+                "roc_auc": metrics["roc_auc"],
+                "average_precision": metrics["average_precision"],
+            }
+        )
+        if metrics["f1"] > best_f1:
+            best_f1 = metrics["f1"]
+            best_model_name = model_name
+
+    comparison = pd.DataFrame(rows).sort_values(["f1", "roc_auc"], ascending=False).reset_index(drop=True)
+    if save_best and best_model_name is not None:
+        train_model(model_dataset, model_name=best_model_name, output_path=MODELS_DIR / "bad_review_classifier.pkl")
+    return models, comparison
 
 
 def predict_probability(model: Pipeline, X: pd.DataFrame):

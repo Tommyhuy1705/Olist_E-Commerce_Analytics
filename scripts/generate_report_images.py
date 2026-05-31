@@ -22,7 +22,7 @@ if str(PROJECT_ROOT) not in sys.path:
 
 from src.etl.extract import load_olist_tables
 from src.etl.transform import build_model_dataset, build_order_features
-from src.models.train import CATEGORICAL_FEATURES, NUMERIC_FEATURES, train_model
+from src.models.train import CATEGORICAL_FEATURES, NUMERIC_FEATURES, train_model, train_model_suite
 from src.olap.iceberg_cube import compute_default_olist_cubes
 
 
@@ -178,6 +178,59 @@ def generate_cube_images(cubes: dict[str, pd.DataFrame]) -> None:
 
 
 def generate_model_images(model_dataset: pd.DataFrame) -> None:
+    _, comparison = train_model_suite(model_dataset)
+    comparison_output = PROJECT_ROOT / "docs" / "report" / "model_comparison.csv"
+    comparison_output.parent.mkdir(parents=True, exist_ok=True)
+    comparison.to_csv(comparison_output, index=False)
+
+    display_comparison = comparison.copy()
+    display_comparison["model_name"] = display_comparison["model_name"].map(
+        {
+            "logistic_regression": "Logistic Regression",
+            "random_forest": "Random Forest",
+            "hist_gradient_boosting": "HistGradientBoosting",
+        }
+    )
+    metric_columns = ["accuracy", "precision", "recall", "f1", "roc_auc", "average_precision"]
+    display_comparison[metric_columns] = display_comparison[metric_columns].round(4)
+
+    fig, ax = plt.subplots(figsize=(11, 3.4))
+    ax.axis("off")
+    table = ax.table(
+        cellText=display_comparison[["model_name", *metric_columns]].values,
+        colLabels=["Mô hình", "Accuracy", "Precision", "Recall", "F1", "ROC-AUC", "Avg Precision"],
+        cellLoc="center",
+        colLoc="center",
+        loc="center",
+    )
+    table.auto_set_font_size(False)
+    table.set_fontsize(9)
+    table.scale(1, 1.45)
+    for (row, col), cell in table.get_celld().items():
+        cell.set_edgecolor("#d1d5db")
+        if row == 0:
+            cell.set_facecolor("#1f2937")
+            cell.set_text_props(color="white", weight="bold")
+        elif row % 2 == 0:
+            cell.set_facecolor("#f9fafb")
+    ax.set_title("So sánh kết quả các mô hình classification", fontsize=14, fontweight="bold", pad=14)
+    save(fig, "model_comparison_table.png")
+
+    melted = display_comparison.melt(
+        id_vars="model_name",
+        value_vars=["precision", "recall", "f1", "roc_auc"],
+        var_name="metric",
+        value_name="score",
+    )
+    fig = plt.figure(figsize=(10, 5.2))
+    sns.barplot(data=melted, x="metric", y="score", hue="model_name")
+    plt.ylim(0, 1)
+    plt.title("So sánh Precision, Recall, F1 và ROC-AUC")
+    plt.xlabel("Chỉ số đánh giá")
+    plt.ylabel("Giá trị")
+    plt.legend(title="Mô hình", loc="lower right")
+    save(fig, "model_comparison_metrics.png")
+
     pipeline, _ = train_model(model_dataset, model_name="random_forest")
     X = model_dataset[NUMERIC_FEATURES + CATEGORICAL_FEATURES]
     y = model_dataset["bad_review"].astype(int)
@@ -520,7 +573,13 @@ def generate_diagrams() -> None:
             bbox=dict(boxstyle="round,pad=0.5", facecolor="#f3f6fa", edgecolor="#555"),
         )
     for x1, x2 in zip(xs[:-1], xs[1:]):
-        ax.annotate("", xy=(x2 - 0.08, 0.55), xytext=(x1 + 0.08, 0.55), arrowprops=dict(arrowstyle="->", lw=1.8))
+        ax.annotate(
+            "",
+            xy=(x2 - 0.08, 0.55),
+            xytext=(x1 + 0.08, 0.55),
+            arrowprops=dict(arrowstyle="-|>", lw=2.4, color="#111111", mutation_scale=18, shrinkA=4, shrinkB=4),
+            zorder=5,
+        )
     ax.set_title("Kiến trúc tổng thể hệ thống Olist Analytics", fontsize=15, fontweight="bold")
     save(fig, "system_architecture.png")
 
