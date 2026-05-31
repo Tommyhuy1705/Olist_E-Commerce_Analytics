@@ -270,37 +270,187 @@ def generate_diagrams() -> None:
     ax.set_title("ERD quan hệ giữa các bảng Olist", fontsize=15, fontweight="bold")
     save(fig, "erd_olist_relationships.png")
 
-    fig, ax = plt.subplots(figsize=(12, 7))
+    fig, ax = plt.subplots(figsize=(14, 9))
     ax.axis("off")
-    fact = (0.5, 0.5)
-    ax.text(
-        *fact,
-        "fact_order_items\nprice, freight_value\nreview_score, delivery_days\ndelay_days, is_delayed, bad_review",
-        ha="center",
-        va="center",
-        fontsize=10,
-        bbox=dict(boxstyle="round,pad=0.55", facecolor="#fff0d8", edgecolor="#cc7a00"),
-    )
-    dims = {
-        "dim_date": (0.5, 0.85),
-        "dim_customer": (0.15, 0.68),
-        "dim_seller": (0.85, 0.68),
-        "dim_product": (0.15, 0.32),
-        "dim_payment": (0.85, 0.32),
-        "dim_order_status": (0.5, 0.15),
-    }
-    for name, (x, y) in dims.items():
+
+    def draw_table(
+        x: float,
+        y: float,
+        width: float,
+        height: float,
+        title: str,
+        rows: list[str],
+        header_color: str,
+        body_color: str,
+        edge_color: str,
+    ) -> tuple[float, float, float, float]:
+        from matplotlib.patches import FancyBboxPatch, Rectangle
+
+        box = FancyBboxPatch(
+            (x, y),
+            width,
+            height,
+            boxstyle="round,pad=0.012,rounding_size=0.012",
+            linewidth=1.8,
+            edgecolor=edge_color,
+            facecolor=body_color,
+            zorder=3,
+        )
+        ax.add_patch(box)
+        header_h = 0.06
+        header = Rectangle((x, y + height - header_h), width, header_h, linewidth=0, facecolor=header_color, zorder=4)
+        ax.add_patch(header)
         ax.text(
-            x,
-            y,
-            name,
+            x + width / 2,
+            y + height - header_h / 2,
+            title,
             ha="center",
             va="center",
             fontsize=11,
-            bbox=dict(boxstyle="round,pad=0.45", facecolor="#e8f8ef", edgecolor="#2e8b57"),
+            fontweight="bold",
+            color="white",
+            zorder=5,
         )
-        ax.annotate("", xy=fact, xytext=(x, y), arrowprops=dict(arrowstyle="->", lw=1.5, color="#333"))
-    ax.set_title("Star Schema của Olist Data Warehouse", fontsize=15, fontweight="bold")
+        available_h = height - header_h - 0.045
+        row_step = min(0.041, available_h / max(len(rows), 1))
+        start_y = y + height - header_h - 0.025
+        for idx, row in enumerate(rows):
+            ax.text(
+                x + 0.018,
+                start_y - idx * row_step,
+                row,
+                ha="left",
+                va="top",
+                fontsize=9.0,
+                color="#1f2933",
+                zorder=5,
+            )
+        return (x, y, width, height)
+
+    def center(box: tuple[float, float, float, float]) -> tuple[float, float]:
+        x, y, w, h = box
+        return x + w / 2, y + h / 2
+
+    def side_point(box: tuple[float, float, float, float], side: str) -> tuple[float, float]:
+        x, y, w, h = box
+        if side == "left":
+            return x, y + h / 2
+        if side == "right":
+            return x + w, y + h / 2
+        if side == "top":
+            return x + w / 2, y + h
+        return x + w / 2, y
+
+    fact_box = draw_table(
+        0.37,
+        0.31,
+        0.26,
+        0.38,
+        "fact_order_items",
+        [
+            "PK fact_order_item_id",
+            "FK date_key",
+            "FK customer_id",
+            "FK seller_id",
+            "FK product_id",
+            "FK payment_key",
+            "price, freight_value",
+            "review_score, delay_days",
+            "is_delayed, bad_review",
+        ],
+        "#b45309",
+        "#fff7ed",
+        "#d97706",
+    )
+
+    dim_specs = {
+        "dim_date": (
+            0.39,
+            0.75,
+            0.22,
+            0.19,
+            ["PK date_key", "date, year, quarter", "month, day_of_week"],
+            "top",
+            "bottom",
+        ),
+        "dim_customer": (
+            0.05,
+            0.56,
+            0.25,
+            0.23,
+            ["PK customer_id", "customer_unique_id", "city, state", "zip_prefix"],
+            "right",
+            "left",
+        ),
+        "dim_seller": (
+            0.70,
+            0.57,
+            0.25,
+            0.20,
+            ["PK seller_id", "city, state", "zip_prefix"],
+            "left",
+            "right",
+        ),
+        "dim_product": (
+            0.05,
+            0.20,
+            0.25,
+            0.24,
+            ["PK product_id", "category", "category_english", "weight, size"],
+            "right",
+            "left",
+        ),
+        "dim_payment": (
+            0.70,
+            0.23,
+            0.25,
+            0.20,
+            ["PK payment_key", "payment_type", "installments_group"],
+            "left",
+            "right",
+        ),
+        "dim_order_status": (
+            0.38,
+            0.045,
+            0.24,
+            0.17,
+            ["PK order_status", "status description"],
+            "top",
+            "bottom",
+        ),
+    }
+
+    for title, (x, y, w, h, rows, dim_side, fact_side) in dim_specs.items():
+        dim_box = draw_table(x, y, w, h, title, rows, "#047857", "#ecfdf5", "#059669")
+        ax.annotate(
+            "",
+            xy=side_point(fact_box, fact_side),
+            xytext=side_point(dim_box, dim_side),
+            arrowprops=dict(arrowstyle="-|>", lw=1.6, color="#374151", shrinkA=6, shrinkB=8),
+            zorder=1,
+        )
+
+    ax.text(
+        0.5,
+        0.965,
+        "Star Schema của Olist Data Warehouse",
+        ha="center",
+        va="center",
+        fontsize=18,
+        fontweight="bold",
+        color="#111827",
+    )
+    ax.text(
+        0.5,
+        0.015,
+        "Grain: 1 dòng fact tương ứng với 1 item trong 1 đơn hàng",
+        ha="center",
+        va="center",
+        fontsize=10,
+        color="#4b5563",
+    )
+    ax.set_xlim(0, 1)
+    ax.set_ylim(0, 1)
     save(fig, "dwh_star_schema.png")
 
     fig, ax = plt.subplots(figsize=(12, 4.5))
